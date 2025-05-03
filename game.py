@@ -23,16 +23,15 @@ def get_ai_response(prompt):
     return response['choices'][0]['message']['content']
 
 #сцена, музика
-width = 800
-height = 600
+pygame.init()
+pygame.mixer.init()
+
+width, height = 800, 600
 
 back = pygame.display.set_mode((width, height))
 pygame.display.set_caption('The Draconic Age')
 icon = pygame.image.load('Dragon.png')
 pygame.display.set_icon(icon)
-
-pygame.init()
-pygame.mixer.init()
 
 music_on = True
 music_path = os.path.join(os.path.dirname(__file__), "res/Angels Airwaves - The Adventure.mp3")
@@ -62,48 +61,45 @@ def draw_chat():
 
 def load_text_from_file(file_path):
     try:
-        with open(file_path, 'r') as file:
-            text = file.read()
-        return text
+        with open(file_path, 'r', encoding='utf-8') as file:
+            return file.read()
     except FileNotFoundError:
-        print(f'none')
+        print(f'not')
         return None
 
 def display_text_from_file(file_path, start_y=320, text_size=40):
     try:
         with open(file_path, 'r', encoding= 'utf-8') as file:
             lines = file.readlines()
-            font = pygame.font.SysFont(None, text_size)
+            font_local = pygame.font.SysFont(None, text_size)
             x = 10
             y = start_y
             for line in lines:
-                text_surface =font.render(line.strip(), True, (255, 255, 255))
+                text_surface =font_local.render(line.strip(), True, (255, 255, 255))
                 text_rect = text_surface.get_rect(topleft=(x,y))
                 back.blit(text_surface, text_rect)
                 y += text_size + 10
-
     except FileNotFoundError:
         print(f"Файл {file_path} не знайдено.")
 
 def toggle_language():
-    def draw_button(text, x, y, w, h, color, action):
-        mouse = pygame.mouse.get_pos()
-        click = pygame.mouse.get_pressed()
+    global current_language
+    current_language = 'en' if current_language == 'ua' else 'ua'
+    print("yess")
 
+
+def draw_button(text, x, y, w, h, color, action):
     pygame.draw.rect(back, color, (x, y, w, h))
-
-    text_surf = font.render(text, True, black)
+    button_font =  pygame.font.SysFont(None, 36)
+    text_surf = button_font.render(text, True, (255, 255, 255))
     text_rect = text_surf.get_rect(center=(x + w // 2, y + h // 2))
     back.blit(text_surf, text_rect)
+       # mouse = pygame.mouse.get_pos()
 
-    if x < mouse[0] < x + w and y < mouse[1] < y + h:
-        if click[0] == 1:
-            #pygame.draw.rect(back, gray, (x, y, w, h))
-            pygame.time.wait((150))
-            if action is not None:
+    if action:
+        if pygame.mouse.get_pressed()[0]:
+            if pygame.Rect(x, y, w, h).collidepoint(pygame.mouse.get_pos()):
                 action()
-            return True
-        return False
 
 # Функції для кнопок
 def start_game():
@@ -170,11 +166,12 @@ def start2_back():
         back.blit(text, text_rect)
         draw_button('Menu', width // 2 - 150, height // 2 + 200, 300, 60, (100, 200, 100), return_to_main_menu)
         draw_chat()
-
+        color = ('blue')
         pygame.draw.rect(back, color, box, 2)
-        txt_surface = font.render(text, True, black)
-        back.blit(txt_surface, (box.x + 5, box.y + 5))
-        box.w = max(700, txt_surface.get_width() + 10)
+        text = ''
+        txt_surf = font.render(text, True, black)
+        back.blit(txt_surf, (box.x + 5, box.y + 5))
+        box.w = max(700, txt_surf.get_width() + 10)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -252,7 +249,7 @@ def info_back():
     while True:
         back.fill((240, 240,240))
         back.blit(inf_image, (0,0))
-        draw_button("Language", width // 2 - 90, height - 100, 180, 50, (200, 150, 100), toggle_language)
+        draw_button("Language", width // 2 - 90, height - 100 - 400, 180, 50, (200, 150, 100), toggle_language)
 
         #mouse_pos = pygame.mouse.get_pos()
 
