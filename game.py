@@ -1,7 +1,10 @@
 import pygame
+import openai
 import sys
 import os
-import openai
+from lab import lab_map, draw_lab, player_position, goal_position
+#from quest import
+#from hero import
 
 #для ші
 openai.api_key = ('gpt:AU54YW8RRi4TXANWp060hfjiJxU6btLIvPmqxAgYF0QLgPDwmNfdLT5NyC9Y8r_u4QZeQmwhzFJFkblB3T4yhgCdA9W2KZIQwDchnwN-SRJKHph3pqraKQNsAmcDeSXdm_4aNY-8_3oiLFalGXckzNJlfA-T')
@@ -25,10 +28,11 @@ def get_ai_response(prompt):
 #сцена, музика
 width = 800
 height = 600
+total_score = 0
 
 back = pygame.display.set_mode((width, height))
 pygame.display.set_caption('The Draconic Age')
-icon = pygame.image.load('Dragon.png')
+icon = pygame.image.load('../Dragon.png')
 pygame.display.set_icon(icon)
 
 pygame.init()
@@ -40,6 +44,31 @@ music_path = os.path.join(os.path.dirname(__file__), "res/Angels Airwaves - The 
 white = (255, 255, 255)
 black = (0,0,0)
 gray = (200, 200, 200)
+total_score = 0
+
+def some_game_event():
+    global total_score
+    total_score += 10
+
+def add_score(points):
+    global total_score
+    total_score += points
+
+def draw_score(surface):
+    font = pygame.font.SysFont(None, 40)  # Выбираем шрифт
+    score_text = font.render(f"Score: {score}", True, (255, 255, 255))  # Создаём текст с текущими баллами
+    surface.blit(score_text, (10, 10))
+
+def scoreS():
+    try:
+        with open ('../res/score.txt', 'r') as f:
+            return int(f.read())
+    except FileNotFoundError:
+        return 0
+
+def save_score(score):
+    with open('../res/score.txt', 'w') as f:
+        f.write(str(score))
 
 font = pygame.font.SysFont(None, 60)
 
@@ -139,12 +168,12 @@ def open_que():
     show_queue_window()
 
 def show_queue_window():
-    queue_window = pygame.Surface((400, 300))
+    queue_window = pygame.Surface((300, 300))
     queue_window.fill((66, 255, 255))
 
-    font4 = pygame.font.SysFont(None, 40)
+    font4 = pygame.font.SysFont('Verdana', 40)
     try:
-        with open('res/lab.txt','r', encoding = 'utf-8') as f:
+        with open('../res/lab.txt', 'r', encoding ='utf-8') as f:
 
             labInf = f.readlines()
     except FileNotFoundError:
@@ -153,8 +182,6 @@ def show_queue_window():
     oy = 20
     for line in labInf:
         text = font4.render(line.strip(), True, (50, 50, 50))
-
-    #text_rect = text.get_rect(center=(width // 2, height // 2))
     queue_window.blit(text, (10, oy))
     oy += 30
 
@@ -168,73 +195,49 @@ def show_queue_window():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:  # Закрытие по нажатию ESC
+                if event.key == pygame.K_ESCAPE:
                     window_open = False
             if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 1:  # Закрытие по клику мыши
+                if event.button == 1:
                     window_open = False
         pygame.display.update()
 
-# Пример вызова функции
-#def open_que():
-    #show_queue_window()
 
+def player_reaches_goal(player_position, goal_position):
+    # Проверяем, достиг ли игрок цели (например, через координаты)
+    if player_position == goal_position:
+        return True
 
+    return False
 
 # Пример карты лабиринта
-lab_map = [
-    [3, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1],
-    [1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1],
-    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
-    [1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
-    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
-    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
-    [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 2, 1],
-]
-
-CELL_SIZE = 38
-OFFSET_X, OFFSET_Y = 160, 19
 
 
-def draw_lab(surface, lab):
-    wall_color =(255, 255, 255)
-    rows = len(lab)
-    cols = len(lab[0])
-
-    for y in range(rows):
-        for x in range(cols):
-            if lab[y][x] == 1:
-                cx = OFFSET_X + x * CELL_SIZE
-                cy = OFFSET_Y + y * CELL_SIZE
-                # Проверим соседей и рисуем линии по краям
-                if y == 0 or lab[y-1][x] == 0:  # верх
-                    pygame.draw.line(surface, wall_color, (cx, cy), (cx + CELL_SIZE, cy), 2)
-                if y == rows - 1 or lab[y+1][x] == 0:  # низ
-                    pygame.draw.line(surface, wall_color, (cx, cy + CELL_SIZE), (cx + CELL_SIZE, cy + CELL_SIZE), 2)
-                if x == 0 or lab[y][x-1] == 0:  # левый
-                    pygame.draw.line(surface, wall_color, (cx, cy), (cx, cy + CELL_SIZE), 2)
-                if x == cols - 1 or lab[y][x+1] == 0:  # правый
-                    pygame.draw.line(surface, wall_color, (cx + CELL_SIZE, cy), (cx + CELL_SIZE, cy + CELL_SIZE), 2)
 
 #меню лабіринт
 def start1_back():
-    lab_image = pygame.image.load('img/inf.jpg')
+    global score
+
+    lab_image = pygame.image.load('../img/inf.jpg')
     lab_image = pygame.transform.scale(lab_image, (800, 800))
+    score = 0
+    total_score = 0
+    session_score = 0
 
     while True:
         back.blit(lab_image, (0, 0))
-        #back.fill((240, 240, 240))
 
         draw_lab(back, lab_map)
+        draw_score(back)
+        add_score(10)
+        if player_reaches_goal(player_position, goal_position):
+            add_score(50)
 
+        session_score += 1
+        total_score += session_score
+        save_score(total_score)
+        print('За сессію:', session_score)
+        print('всього:', total_score)
         font_big = pygame.font.SysFont(None, 80)
         text = font_big.render('Start', True, (50, 50, 50))
         text_rect = text.get_rect(center=(width // 2, height // 2))
@@ -302,7 +305,6 @@ def start2_back():
         pygame.display.update()
 def draw_circle_button(text, x, y, radius, color, action=None, alpha=0):
     circle_surface = pygame.Surface((radius *  2, radius * 2), pygame.SRCALPHA)
-    #pygame.draw.circle(back, color, (x, y), radius)
     pygame.draw.circle(circle_surface, (*color,alpha), (radius, radius), radius)
     back.blit(circle_surface, (x - radius, y - radius))
 
@@ -358,17 +360,11 @@ def main_menu():
 
 def info_back():
 
-    inf_image = pygame.image.load('img/inf.jpg')
+    inf_image = pygame.image.load('../img/inf.jpg')
     inf_image = pygame.transform.scale(inf_image, (800, 800))
 
-    inc_image = pygame.image.load('img/cat_inf.png')
+    inc_image = pygame.image.load('../img/cat_inf.png')
     inc_image = pygame.transform.scale(inc_image, (500, 500))
-
-    #font_big = pygame.font.SysFont(None, 16)
-
-
-    #pygame.display.update
-    #pygame.time.delay(100)
 
     while True:
         back.fill((240, 240,240))
@@ -378,13 +374,13 @@ def info_back():
 
         draw_button("Language", width // 2 - 90, height - 100 - 400, 180, 50, (63, 91, 120), toggle_language)
         draw_circle_button("Okay", width // 2, height - 100 - 320, 46, (63, 91, 120), return_to_main_menu, alpha=0 )
-        #mouse_pos = pygame.mouse.get_pos()
+
 
         if current_language == 'en':
-            display_text_from_file('res/informationEng.txt', text_size=24)
+            display_text_from_file('../res/informationEng.txt', text_size=24)
         else:
 
-            display_text_from_file('res/information.txt', text_size=24)
+            display_text_from_file('../res/information.txt', text_size=24)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -416,14 +412,18 @@ def toggle_music():
         music_on = True
 
 def settings_back():
+
+    global total_score
     global music_on
+    font_big = pygame.font.SysFont(None, 60)
+
+
+    score_text = font_big.render(f'score {total_score}', True, (255, 50, 50))
+    score_rect = score_text.get_rect(center=(width // 2, height //2 + 150))
+
     while True:
         back.fill((240, 240, 240))
-        font_big = pygame.font.SysFont(None, 60)
-        text = font_big.render('Set Screen', True, (50, 50, 50))
-        text_rect = text.get_rect(center=(width // 2, height // 4))
-        back.blit(text, text_rect)
-
+        back.blit(score_text, score_rect)
 
         music_text = "Music: ON" if music_on else "Music: OFF"
         draw_button(music_text, width //560 - 10, height // 78, 300, 60,(100, 200, 100), toggle_music)
