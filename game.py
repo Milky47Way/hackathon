@@ -23,15 +23,16 @@ def get_ai_response(prompt):
     return response['choices'][0]['message']['content']
 
 #сцена, музика
-pygame.init()
-pygame.mixer.init()
-
-width, height = 800, 600
+width = 800
+height = 600
 
 back = pygame.display.set_mode((width, height))
 pygame.display.set_caption('The Draconic Age')
 icon = pygame.image.load('Dragon.png')
 pygame.display.set_icon(icon)
+
+pygame.init()
+pygame.mixer.init()
 
 music_on = True
 music_path = os.path.join(os.path.dirname(__file__), "res/Angels Airwaves - The Adventure.mp3")
@@ -61,24 +62,26 @@ def draw_chat():
 
 def load_text_from_file(file_path):
     try:
-        with open(file_path, 'r', encoding='utf-8') as file:
-            return file.read()
+        with open(file_path, 'r') as file:
+            text = file.read()
+        return text
     except FileNotFoundError:
-        print(f'not')
+        print(f'none')
         return None
 
 def display_text_from_file(file_path, start_y=320, text_size=40):
     try:
         with open(file_path, 'r', encoding= 'utf-8') as file:
             lines = file.readlines()
-            font_local = pygame.font.SysFont(None, text_size)
+            font = pygame.font.SysFont(None, text_size)
             x = 10
             y = start_y
             for line in lines:
-                text_surface =font_local.render(line.strip(), True, (255, 255, 255))
+                text_surface =font.render(line.strip(), True, (255, 255, 255))
                 text_rect = text_surface.get_rect(topleft=(x,y))
                 back.blit(text_surface, text_rect)
                 y += text_size + 10
+
     except FileNotFoundError:
         print(f"Файл {file_path} не знайдено.")
 
@@ -86,7 +89,6 @@ def toggle_language():
     global current_language
     current_language = 'en' if current_language == 'ua' else 'ua'
     print("yess")
-
 
 def draw_button(text, x, y, w, h, color, action):
     pygame.draw.rect(back, color, (x, y, w, h))
@@ -121,7 +123,7 @@ def start_back():
         back.blit(text, text_rect)
         draw_button('Menu', width // 2 - 150, height // 2 + 200, 300, 60, (100, 200, 100), return_to_main_menu)
         draw_button('Game', width // 2 - 150, height // 2 - 200, 300, 60, (100, 200, 100), start2_back)
-        draw_button('Game', width // 2 - 150, height // 2 + 20, 300, 60, (100, 200, 100), start1_back)
+        draw_button("Labyrinth", width // 2 - 150, height // 2 + 20, 300, 60, (100, 200, 100), start1_back)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -133,17 +135,112 @@ def start_back():
 
         pygame.display.update()
 
+def open_que():
+    show_queue_window()
+
+def show_queue_window():
+    queue_window = pygame.Surface((400, 300))
+    queue_window.fill((66, 255, 255))
+
+    font4 = pygame.font.SysFont(None, 40)
+    try:
+        with open('res/lab.txt','r', encoding = 'utf-8') as f:
+
+            labInf = f.readlines()
+    except FileNotFoundError:
+        pass
+
+    oy = 20
+    for line in labInf:
+        text = font4.render(line.strip(), True, (50, 50, 50))
+
+    #text_rect = text.get_rect(center=(width // 2, height // 2))
+    queue_window.blit(text, (10, oy))
+    oy += 30
+
+    back.blit(queue_window, (0, 150))
+    pygame.display.update()
+
+    window_open = True
+    while window_open:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:  # Закрытие по нажатию ESC
+                    window_open = False
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Закрытие по клику мыши
+                    window_open = False
+        pygame.display.update()
+
+# Пример вызова функции
+#def open_que():
+    #show_queue_window()
+
+
+
+# Пример карты лабиринта
+lab_map = [
+    [3, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+    [1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1],
+    [1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1],
+    [1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+    [1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1],
+    [1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1],
+    [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    [1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 2, 1],
+]
+
+CELL_SIZE = 38
+OFFSET_X, OFFSET_Y = 160, 19
+
+
+def draw_lab(surface, lab):
+    wall_color =(255, 255, 255)
+    rows = len(lab)
+    cols = len(lab[0])
+
+    for y in range(rows):
+        for x in range(cols):
+            if lab[y][x] == 1:
+                cx = OFFSET_X + x * CELL_SIZE
+                cy = OFFSET_Y + y * CELL_SIZE
+                # Проверим соседей и рисуем линии по краям
+                if y == 0 or lab[y-1][x] == 0:  # верх
+                    pygame.draw.line(surface, wall_color, (cx, cy), (cx + CELL_SIZE, cy), 2)
+                if y == rows - 1 or lab[y+1][x] == 0:  # низ
+                    pygame.draw.line(surface, wall_color, (cx, cy + CELL_SIZE), (cx + CELL_SIZE, cy + CELL_SIZE), 2)
+                if x == 0 or lab[y][x-1] == 0:  # левый
+                    pygame.draw.line(surface, wall_color, (cx, cy), (cx, cy + CELL_SIZE), 2)
+                if x == cols - 1 or lab[y][x+1] == 0:  # правый
+                    pygame.draw.line(surface, wall_color, (cx + CELL_SIZE, cy), (cx + CELL_SIZE, cy + CELL_SIZE), 2)
 
 #меню лабіринт
 def start1_back():
+    lab_image = pygame.image.load('img/inf.jpg')
+    lab_image = pygame.transform.scale(lab_image, (800, 800))
+
     while True:
-        back.fill((240, 240, 240))
+        back.blit(lab_image, (0, 0))
+        #back.fill((240, 240, 240))
+
+        draw_lab(back, lab_map)
+
         font_big = pygame.font.SysFont(None, 80)
         text = font_big.render('Start', True, (50, 50, 50))
         text_rect = text.get_rect(center=(width // 2, height // 2))
         back.blit(text, text_rect)
-        draw_button('Menu', width // 2 - 150, height // 2 + 200, 300, 60, (100, 200, 100), return_to_main_menu)
-
+        draw_button('Menu', width // 2 - 350, height // 2 - 200, 150, 60, (100, 200, 100), return_to_main_menu)
+        draw_circle_button('?', width // 2 - 350, height // 2 + 200, 30, (100, 200, 100), open_que)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -203,6 +300,24 @@ def start2_back():
                         text += event.unicode
 
         pygame.display.update()
+def draw_circle_button(text, x, y, radius, color, action=None, alpha=0):
+    circle_surface = pygame.Surface((radius *  2, radius * 2), pygame.SRCALPHA)
+    #pygame.draw.circle(back, color, (x, y), radius)
+    pygame.draw.circle(circle_surface, (*color,alpha), (radius, radius), radius)
+    back.blit(circle_surface, (x - radius, y - radius))
+
+    font = pygame.font.SysFont(None, 24)
+    text_surface = font.render(text, True, (158, 189, 230))
+    text_rect = text_surface.get_rect(center=(x, y))
+    back.blit(text_surface, text_rect)
+
+    for event in pygame.event.get(pygame.MOUSEBUTTONDOWN):
+        if event.button == 1:
+            mouse_x, mouse_y = event.pos
+            if (mouse_x - x) ** 2 + (mouse_y - y) ** 2 <= radius**2:
+                if action:
+                    action()
+
 
 def draw_button(text, x, y, w, h, color, action=None):
     pygame.draw.rect(back, color, (x, y, w, h))
@@ -242,15 +357,27 @@ def main_menu():
         pygame.display.update()
 
 def info_back():
-    inf_image = pygame.image.load('img/Picsart_25-05-03_00-50-02-894.jpg')
-    #font_big = pygame.font.SysFont(None, 16)
+
+    inf_image = pygame.image.load('img/inf.jpg')
     inf_image = pygame.transform.scale(inf_image, (800, 800))
+
+    inc_image = pygame.image.load('img/cat_inf.png')
+    inc_image = pygame.transform.scale(inc_image, (500, 500))
+
+    #font_big = pygame.font.SysFont(None, 16)
+
+
+    #pygame.display.update
+    #pygame.time.delay(100)
 
     while True:
         back.fill((240, 240,240))
         back.blit(inf_image, (0,0))
-        draw_button("Language", width // 2 - 90, height - 100 - 400, 180, 50, (200, 150, 100), toggle_language)
+        back.blit(inc_image, (480, 80))
 
+
+        draw_button("Language", width // 2 - 90, height - 100 - 400, 180, 50, (63, 91, 120), toggle_language)
+        draw_circle_button("Okay", width // 2, height - 100 - 320, 46, (63, 91, 120), return_to_main_menu, alpha=0 )
         #mouse_pos = pygame.mouse.get_pos()
 
         if current_language == 'en':
