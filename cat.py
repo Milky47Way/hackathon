@@ -231,71 +231,42 @@ for i in range(1, 6):
     spawn_x, spawn_y = find_spawn_point(player[i][0])
     players[i] = Player(spawn_x, spawn_y, player[i][1], player[i][2], width, height, player[i][3])
 
+
 #кнопки
-buttons = []
 def draw_button(text, x, y, w, h, base_color, hover_color, action=None, alpha=255, border_radius=0):
-    buttons.append({
-        "text": text,
-        "x": x, "y": y, "w": w, "h": h,
-        "base_color": base_color,
-        "hover_color": hover_color,
-        "action": action,
-        "alpha": alpha,
-        "border_radius": border_radius
-    })
-
-def render_buttons():
     mouse_pos = pygame.mouse.get_pos()
+    rect = pygame.Rect(x, y, w, h)
+    current_color = hover_color if rect.collidepoint(mouse_pos) else base_color
 
-    for btn in buttons:
-        rect = pygame.Rect(btn["x"], btn["y"], btn["w"], btn["h"])
-        current_color = btn["hover_color"] if rect.collidepoint(mouse_pos) else btn["base_color"]
+    button_surface = pygame.Surface((w, h), pygame.SRCALPHA)
+    color_with_alpha = (*current_color, alpha)
+    pygame.draw.rect(button_surface, color_with_alpha, button_surface.get_rect(), border_radius=border_radius)
+    button_surface.fill((*current_color, alpha))
+    back.blit(button_surface, (x, y))
 
-        button_surface = pygame.Surface((btn["w"], btn["h"]), pygame.SRCALPHA)
-        color_with_alpha = (*current_color, btn["alpha"])
-        pygame.draw.rect(button_surface, color_with_alpha, button_surface.get_rect(),
-                             border_radius=btn["border_radius"])
-        back.blit(button_surface, (btn["x"], btn["y"]))
+    text_surface = font9.render(text, True, (255, 255, 255))
+    text_rect = text_surface.get_rect(center=rect.center)
+    back.blit(text_surface, text_rect)
 
-        text_surface = font9.render(btn["text"], True, (255, 255, 255))
-        text_rect = text_surface.get_rect(center=rect.center)
-        back.blit(text_surface, text_rect)
+    if action and pygame.mouse.get_pressed()[0] and rect.collidepoint(mouse_pos):
+        action()
 
-def handle_button_clicks(event):
-    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-        mouse_x, mouse_y = event.pos
-        for btn in buttons:
-            rect = pygame.Rect(btn["x"], btn["y"], btn["w"], btn["h"])
-            if rect.collidepoint(mouse_x, mouse_y):
-                if btn["action"]:
-                    btn["action"]()
-
-circle_buttons = []
 def draw_circle_button(text, x, y, radius, color, action=None, alpha=0):
-    circle_buttons.append({
-        "text": text,
-        "x": x, "y": y, "radius": radius,
-        "color": color, "alpha": alpha,
-        "action": action
-    })
+    circle_surface = pygame.Surface((radius *  2, radius * 2), pygame.SRCALPHA)
+    pygame.draw.circle(circle_surface, (*color,alpha), (radius, radius), radius)
+    back.blit(circle_surface, (x - radius, y - radius))
 
-def render_circle_buttons():
-    for btn in circle_buttons:
-        circle_surface = pygame.Surface((btn["radius"]*2, btn["radius"]*2), pygame.SRCALPHA)
-        pygame.draw.circle(circle_surface, (*btn["color"], btn["alpha"]), (btn["radius"], btn["radius"]), btn["radius"])
-        back.blit(circle_surface, (btn["x"]-btn["radius"], btn["y"]-btn["radius"]))
+    text_surface = font9.render(text, True, (158, 189, 230))
+    text_rect = text_surface.get_rect(center=(x, y))
+    back.blit(text_surface, text_rect)
 
-        text_surface = font9.render(btn["text"], True, (158, 189, 230))
-        text_rect = text_surface.get_rect(center=(btn["x"], btn["y"]))
-        back.blit(text_surface, text_rect)
+    for event in pygame.event.get(pygame.MOUSEBUTTONDOWN):
 
-def handle_circle_button_clicks(event):
-    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-        mouse_x, mouse_y = event.pos
-        for btn in circle_buttons:
-            if (mouse_x - btn["x"])**2 + (mouse_y - btn["y"])**2 <= btn["radius"]**2:
-                if btn["action"]:
-                    btn["action"]()
+        if event.button == 1:
+            mouse_x, mouse_y = event.pos
+            if (mouse_x - x) ** 2 + (mouse_y - y) ** 2 <= radius**2:
+                if action:
+                    action()
 
 #функції для кнопок
 def start_game():
@@ -385,7 +356,7 @@ def game_five():
     last_coin_type = None
 
     while True:
-        back.blit(backgrounds["game_5"], (0, 0))
+        back.blit(backgrounds["game5"], (0, 0))
         draw_lab(back, lab_map)
         draw_timer(back)
 
@@ -412,7 +383,7 @@ def game_five():
                 player_row = (player[5].rect.centery - OFFSET_Y) // CELL_SIZE
                 player_col = (player[5].rect.centerx - OFFSET_X) // CELL_SIZE
                 if (player_row, player_col) == (exit_row, exit_col):
-                    show_level_complete_window(5)
+                    show_level_complete_window(5, backgrounds)
                     return
 
         enemies.update()
@@ -445,10 +416,10 @@ def game_one():
     clouds = [Cloud('img/game1/cloud.png') for _ in range(25)]
 
     while True:
-        back.blit(backgrounds["game_1"], (0, 0))
+        back.blit(backgrounds["game1"], (0, 0))
         draw_lab(back, lab_map)
         draw_timer(back)
-        draw_score(back, last_coin_type)
+        draw_score(back, score, last_coin_type)
 
         enemies.update()
         enemies.draw(back)
@@ -485,20 +456,22 @@ def game_one():
             player_row = (player[1].rect.centery - OFFSET_Y) // CELL_SIZE
             player_col = (player[1].rect.centerx - OFFSET_X) // CELL_SIZE
             if (player_row, player_col) == (exit_row, exit_col):
-                show_level_complete_window(1)
+                show_level_complete_window(1, backgrounds)
                 return
 
         pygame.time.wait(10)
         pygame.display.update()
 
-def collect_coin(coins, player, score, last_coin_type):
-    for coin in coins[:]:
+def collect_coin(coins, player):
+    global score, last_coin_type
+    for coin in coins:
         if player.rect.colliderect(coin.rect):
             score += coin.value
             last_coin_type = coin.type
             coins.remove(coin)
             break
-    return coins, score, last_coin_type
+    return coins
+            #score, last_coin_type)
 
 def game_two():
         global score, current_lab_map, coins, last_coin_type, current_level
@@ -515,10 +488,10 @@ def game_two():
         clock = pygame.time.Clock()
 
         while True:
-            back.blit(backgrounds["game_2"], (0, 0))
+            back.blit(backgrounds["game2"], (0, 0))
             draw_lab(back, lab_map_2)
             draw_timer(back)
-            draw_score(back)
+            draw_score(back, score, last_coin_type)
 
             enemies.update()
             enemies.draw(back)
@@ -554,7 +527,7 @@ def game_two():
                 player_row = (player[2].rect.centery - OFFSET_Y) // CELL_SIZE
                 player_col = (player[2].rect.centerx - OFFSET_X) // CELL_SIZE
                 if (player_row, player_col) == (exit_row, exit_col):
-                    show_level_complete_window(2)
+                    show_level_complete_window(2, backgrounds)
                     return
 
             clock.tick(60)
@@ -574,10 +547,10 @@ def game_three():
     clock = pygame.time.Clock()
 
     while True:
-        back.blit(backgrounds["game_3"], (0, 0))
+        back.blit(backgrounds["game3"], (0, 0))
         draw_lab(back, lab_map_3)
         draw_timer(back)
-        draw_score(back)
+        draw_score(back, score, last_coin_type)
 
         enemies.update()
         enemies.draw(back)
@@ -633,10 +606,10 @@ def game_four():
     clock = pygame.time.Clock()
 
     while True:
-        back.blit(backgrounds["game_4"], (0, 0))
+        back.blit(backgrounds["game4"], (0, 0))
         draw_lab(back, lab_map_4)
         draw_timer(back)
-        draw_score(back)
+        draw_score(back, score, last_coin_type)
 
         enemies.update()
         enemies.draw(back)
@@ -662,7 +635,7 @@ def game_four():
             player_row = (player[4].rect.centery - OFFSET_Y) // CELL_SIZE
             player_col = (player[4].rect.centerx - OFFSET_X) // CELL_SIZE
             if (player_row, player_col) == (exit_row, exit_col):
-                show_level_complete_window(4)
+                show_level_complete_window(4, backgrounds)
                 return
 
         for event in pygame.event.get():
@@ -799,7 +772,8 @@ def toggle_music():
         pygame.mixer.music.pause()
 
 
-def show_level_complete_window(level, backgrounds ):
+def show_level_complete_window(level ):
+    global backgrounds
     screen = pygame.display.set_mode((800, 600))
     screen.fill((63, 91, 120))
 
@@ -843,3 +817,4 @@ backgrounds = load_images()
 
 if __name__ == "__main__":
     load_music()
+    main_menu()
